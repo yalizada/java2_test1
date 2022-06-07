@@ -1,0 +1,112 @@
+<html>
+
+<head>
+<title>
+Menim proqramin
+</title>
+</head>
+<body>
+<button onclick="localStorage.removeItem('token');window.location.href='login.html';" >Tehlukesiz cixis</button>
+
+<hr>
+<input id="ramModel" placeholder="ramin modelini bura yaz"><br>
+<input id="ramSize" placeholder="ramin olcusunu bura yaz"><br>
+<button onclick="onSaveRam()">Yadda saxla</button>
+
+
+<hr>
+<table style="width:100%" border="1">
+<thead>
+<tr>
+<th>ID</th>
+<th>Model</th>
+<th>Size</th>
+<th>Emeliyyatlar</th>
+</tr>
+</thead>
+<tbody id="rams">
+</tbody>
+</table>
+
+
+<script>
+  
+
+function onSaveRam(){
+let ramModel=document.getElementById('ramModel').value;
+let ramSize=document.getElementById('ramSize').value;
+
+let ramObj={model:ramModel,size:ramSize};
+ramObj.type="ddr4";
+
+let http=new XMLHttpRequest();
+http.onload=function(){
+loadRams();
+}
+
+http.open('POST','http://149.102.150.121:8091/rams',true);
+http.setRequestHeader("Content-Type","application/json");
+http.setRequestHeader("Authorization",localStorage.getItem('token'));
+http.send(JSON.stringify(ramObj));
+
+
+}
+
+function loadRams(){
+
+let http=new XMLHttpRequest();
+
+http.onload=function(){
+var result=this.responseText;
+var rams=JSON.parse(result);
+console.log(rams);
+
+var r="";
+
+for(let i=0;i<rams.length;i++){
+r+="<tr>";
+
+r+="<td>"+rams[i].id;
+r+="</td>";
+
+r+="<td>"+rams[i].model;
+r+="</td>";
+
+r+="<td>"+rams[i].size;
+r+="</td>";
+
+r+="<td><button onclick='deleteRam("+rams[i].id+")'>Sil</button>" ;
+r+=" <button onclick='deleteRam("+rams[i].id+")'>Redakte</button>" ;
+r+="</td>";
+
+
+r+="</tr>";
+}
+document.getElementById('rams').innerHTML=r;
+
+ }
+
+http.open('GET','http://149.102.150.121:8091/rams',true);
+http.setRequestHeader("Authorization",localStorage.getItem('token'));
+http.send();
+}
+
+
+loadRams();
+
+function deleteRam(ramId){
+let http=new XMLHttpRequest();
+
+http.onload=function(){
+ loadRams();
+ }
+
+http.open('DELETE','http://149.102.150.121:8091/rams/'+ramId,true);
+http.setRequestHeader("Authorization",localStorage.getItem('token'));
+http.send();
+}
+</script>
+</body>
+
+</html>
+

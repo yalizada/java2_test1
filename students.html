@@ -1,0 +1,189 @@
+<html>
+
+<head>
+    <title>
+        Telebelerim
+    </title>
+</head>
+
+<body>
+    <button onclick="localStorage.removeItem('token');window.location.href='login.html';">Tehlukesiz cixis</button>
+
+    <hr>
+
+    <input id="studentName" placeholder="telebe adini bura yaz"><br>
+    <input id="studentSurname" placeholder="telebe soyadini bura yaz"><br>
+    <button onclick="onSaveStudent()">Yadda saxla</button> <span>|</span>
+    <input placeholder="Axtaris" onchange="search1(event)">
+
+
+    <hr>
+    <table style="width:100%" border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Ad</th>
+                <th>Soyad</th>
+                <th>Emeliyyatlar</th>
+            </tr>
+        </thead>
+        <tbody id="students">
+        </tbody>
+    </table>
+    <button onclick="loadPrevious()">Evvelki</button>
+    <button onclick="loadNext()">Sonraki</button>
+
+
+    <script>
+        let begin = 0;
+        let length = 10;
+
+        function onSaveStudent() {
+            let studentName = document.getElementById('studentName').value;
+            let studentSurname = document.getElementById('studentSurname').value;
+
+            let studentObj = { name: studentName, surname: studentSurname };
+
+
+            let http = new XMLHttpRequest();
+            http.onload = function () {
+                loadStudents();
+            }
+
+            http.open('POST', 'http://149.102.150.121:8091/students', true);
+            http.setRequestHeader("Content-Type", "application/json");
+            http.setRequestHeader("Authorization", localStorage.getItem('token'));
+            http.send(JSON.stringify(studentObj));
+
+
+        }
+
+        function loadStudents() {
+
+            let http = new XMLHttpRequest();
+
+            http.onload = function () {
+                var result = this.responseText;
+                var students = JSON.parse(result);
+                console.log(students);
+
+                showOnTable(students);
+
+            }
+
+            http.open('POST', 'http://149.102.150.121:8091/students/pagination', true);
+            http.setRequestHeader("Authorization", localStorage.getItem('token'));
+            http.setRequestHeader("Content-Type", "application/json");
+            http.send(JSON.stringify({ begin: begin, length: length }));
+        }
+
+
+        loadStudents();
+
+        function deleteStudent(studentId) {
+            let http = new XMLHttpRequest();
+
+            http.onload = function () {
+                loadStudents();
+            }
+
+            http.open('DELETE', 'http://149.102.150.121:8091/students/' + studentId, true);
+            http.setRequestHeader("Authorization", localStorage.getItem('token'));
+            http.send();
+        }
+
+
+        function search1(event) {
+            let searchText = event.target.value;
+            console.log(searchText);
+
+
+            let http = new XMLHttpRequest();
+            http.onload = function () {
+                let result = this.responseText;
+                let students = JSON.parse(result).data;
+                showOnTable(students);
+            }
+
+            http.open('POST', 'http://149.102.150.121:8091/students/search', true);
+            http.setRequestHeader("Content-Type", "application/json");
+            http.setRequestHeader("Authorization", localStorage.getItem('token'));
+            http.send(JSON.stringify({ searchText: searchText }));
+
+
+        }
+
+        function showOnTable(students) {
+            var r = "";
+
+            for (let i = 0; i < students.length; i++) {
+                let s = students[i];
+                r += "<tr>";
+
+                r += "<td>" + s.id;
+                r += "</td>";
+
+                r += "<td>" + s.name;
+                r += "</td>";
+
+                r += "<td>" + s.surname;
+                r += "</td>";
+
+                r += "<td><button onclick='deleteStudent(" + s.id + ")'>Sil</button>";
+                r += " <button onclick='deleteStudent(" + s.id + ")'>Redakte</button>";
+                r += "</td>";
+
+
+                r += "</tr>";
+            }
+            document.getElementById('students').innerHTML = r;
+        }
+
+
+
+        function loadNext() {
+
+            begin += length;
+            let http = new XMLHttpRequest();
+
+            http.onload = function () {
+                var result = this.responseText;
+                var students = JSON.parse(result);
+                console.log(students);
+
+                showOnTable(students);
+
+            }
+
+            http.open('POST', 'http://149.102.150.121:8091/students/pagination', true);
+            http.setRequestHeader("Authorization", localStorage.getItem('token'));
+            http.setRequestHeader("Content-Type", "application/json");
+            http.send(JSON.stringify({ begin: begin, length: length }));
+
+
+        } function loadPrevious() {
+
+            begin -= length;
+            let http = new XMLHttpRequest();
+
+            http.onload = function () {
+                var result = this.responseText;
+                var students = JSON.parse(result);
+                console.log(students);
+
+                showOnTable(students);
+
+            }
+
+            http.open('POST', 'http://149.102.150.121:8091/students/pagination', true);
+            http.setRequestHeader("Authorization", localStorage.getItem('token'));
+            http.setRequestHeader("Content-Type", "application/json");
+            http.send(JSON.stringify({ begin: begin, length: length }));
+
+
+        }
+
+    </script>
+</body>
+
+</html>
